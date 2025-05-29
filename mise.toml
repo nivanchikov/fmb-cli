@@ -1,0 +1,4 @@
+[tasks.bootstrap]
+run = [
+    'cp -n ./Secrets.sample.swift ./Sources/Secrets.swift 2>/dev/null || true',
+]
