@@ -6,8 +6,9 @@ struct FMBCommand: AsyncParsableCommand {
         commandName: "fmb",
         abstract: "A command-line tool to import email transactions.",
         subcommands: [
-            LoginCommand.self,
-            LogoutCommand.self,
+            GoogleGroupCommand.self,
+            LMTokenCommand.self,
+            ProcessCommand.self,
         ]
     )
 }

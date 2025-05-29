@@ -11,10 +11,10 @@ enum LoginError: Error {
     case failedToDecodeToken(response: String)
 }
 
-struct LoginCommand: AsyncParsableCommand {
+struct GoogleLoginCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "login",
-        abstract: "Log in to the FMB service."
+        abstract: "Authenticate fmb-cli to access your Gmail inbox."
     )
 
     enum Constants {

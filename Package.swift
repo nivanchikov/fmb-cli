@@ -15,6 +15,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-http-types.git", exact: "1.4.0"),
         .package(url: "https://github.com/kishikawakatsumi/KeychainAccess.git", exact: "4.2.2"),
         .package(url: "https://github.com/tuist/Noora", exact: "0.38.0"),
+        .package(url: "https://github.com/eastriverlee/LLM.swift.git", exact: "1.7.2"),
     ],
     targets: [
         .executableTarget(
@@ -25,6 +26,7 @@ let package = Package(
                 .product(name: "HTTPTypes", package: "swift-http-types"),
                 .product(name: "KeychainAccess", package: "KeychainAccess"),
                 .product(name: "Noora", package: "Noora"),
+                .product(name: "LLM", package: "LLM.swift"),
             ]
         )
     ]
