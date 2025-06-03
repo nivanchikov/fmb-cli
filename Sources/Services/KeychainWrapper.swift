@@ -1,5 +1,4 @@
 import Foundation
-import KeychainAccess
 
 struct KeychainWrapper {
     enum Constants {
@@ -7,62 +6,106 @@ struct KeychainWrapper {
         static let lunchMoneyAPIKey = "fmb-cli.lm_api_key"
         static let service = "com.nivanchikov.fmb-cli"
     }
+    
+    private static func makeBaseDirectoryURL() throws {
+        try FileManager.default.createDirectory(
+            at: baseDirectory,
+            withIntermediateDirectories: true
+        )
+    }
+    
+    private static var baseDirectory: URL {
+        URL.applicationSupportDirectory.appending(
+            path: Constants.service,
+            directoryHint: .isDirectory
+        )
+    }
+    
+    private static func url(for key: String) -> URL {
+        baseDirectory.appending(path: key, directoryHint: .notDirectory)
+    }
+
+    private static func getData(_ key: String) throws -> Data? {
+        let url = url(for: key)
+        
+        guard FileManager.default.fileExists(atPath: url.path(percentEncoded: false)) else {
+            return nil
+        }
+        
+        return try Data(contentsOf: url)
+    }
+    
+    private static func contains(_ key: String) -> Bool {
+        let url = url(for: key)
+        return FileManager.default.fileExists(atPath: url.path(percentEncoded: false))
+    }
+    
+    private static func get(_ key: String) throws -> String? {
+        guard let data = try getData(key) else {
+            return nil
+        }
+        return String(decoding: data, as: UTF8.self)
+    }
+    
+    private static func set(_ data: Data, key: String) throws {
+        try makeBaseDirectoryURL()
+        
+        let url = url(for: key)
+        try data.write(to: url)
+    }
+    
+    private static func set(_ string: String, key: String) throws {
+        let url = url(for: key)
+        try Data(string.utf8).write(to: url)
+    }
+    
+    private static func remove(_ key: String) throws {
+        let url = url(for: key)
+        
+        if FileManager.default.fileExists(atPath: url.path(percentEncoded: false)) {
+            try FileManager.default.removeItem(at: url)
+        }
+    }
 
     // MARK: - Google
-    static func getGoogleTokens() throws -> GoogleTokens? {
-        let keychain = Keychain(service: Constants.service)
-
-        guard let data = try keychain.getData(Constants.googleTokensKey) else {
+    static func getGoogleTokens() throws -> GoogleAccessRefreshTokens? {
+        guard let data = try getData(Constants.googleTokensKey) else {
             return nil
         }
 
         let decoder = JSONDecoder()
-        return try decoder.decode(GoogleTokens.self, from: data)
+        return try decoder.decode(GoogleAccessRefreshTokens.self, from: data)
     }
 
-    static func saveGoogleTokens(_ tokens: GoogleTokens) throws {
+    static func saveGoogleTokens(_ tokens: GoogleAccessRefreshTokens) throws {
         let encoder = JSONEncoder()
         let data = try encoder.encode(tokens)
 
-        let keychain = Keychain(service: Constants.service)
-        try keychain.set(data, key: Constants.googleTokensKey)
+        try set(data, key: Constants.googleTokensKey)
     }
 
     static func deleteGoogleTokens() throws {
-        let keychain = Keychain(service: Constants.service)
-        try keychain.remove(Constants.googleTokensKey)
+        try remove(Constants.googleTokensKey)
     }
 
-    static func hasGoogleTokens() throws -> Bool {
-        let keychain = Keychain(service: Constants.service)
-
-        return try keychain.contains(
-            Constants.googleTokensKey,
-            withoutAuthenticationUI: true
-        )
+    static func hasGoogleTokens() -> Bool {
+        contains(Constants.googleTokensKey)
     }
 
     // MARK: - Lunch Money
     static func saveLunchMoneyToken(_ token: String) throws {
-        let keychain = Keychain(service: Constants.service)
-        try keychain.set(token, key: Constants.lunchMoneyAPIKey)
+        try set(token, key: Constants.lunchMoneyAPIKey)
     }
 
     static func deleteLunchMoneyToken() throws {
-        let keychain = Keychain(service: Constants.service)
-        try keychain.remove(Constants.lunchMoneyAPIKey)
+        try remove(Constants.lunchMoneyAPIKey)
     }
 
     static func getLunchMoneyToken() throws -> String? {
-        let keychain = Keychain(service: Constants.service)
-        return try keychain.get(Constants.lunchMoneyAPIKey)
+        return try get(Constants.lunchMoneyAPIKey)
     }
 
     static func hasLunchMoneyToken() throws -> Bool {
-        let keychain = Keychain(service: Constants.service)
-        return try keychain.contains(
-            Constants.lunchMoneyAPIKey,
-            withoutAuthenticationUI: true
-        )
+        return contains(Constants.lunchMoneyAPIKey)
     }
 }

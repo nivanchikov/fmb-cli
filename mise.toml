@@ -2,3 +2,14 @@
 run = [
     'cp -n ./Secrets.sample.swift ./Sources/Secrets.swift 2>/dev/null || true',
 ]
+
+[tasks.install]
+run = [
+    'swift build -c release',
+    'mkdir -p /usr/local/bin',
+    'cp .build/release/fmb /usr/local/bin/fmb',
+    'chmod 755 /usr/local/bin/fmb',
+]
+
+[tools]
+tuist = "4.50.1"

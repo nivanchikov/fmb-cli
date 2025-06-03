@@ -31,34 +31,25 @@ struct AddLMTokenCommand: AsyncParsableCommand {
     }
 
     private func verifyToken(_ token: String) async {
-        var request = URLRequest(url: URL(string: "https://dev.lunchmoney.app/v1/me")!)
-        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-
         do {
-            let (data, _) = try await URLSession.shared.data(for: request)
-
-            let decoder = JSONDecoder()
-            decoder.keyDecodingStrategy = .convertFromSnakeCase
-
-            let user = try decoder.decode(LunchMoneyUser.self, from: data)
+            let user = try await LunchMoneyClient.verifyToken(token)
 
             let confirmed = Noora().yesOrNoChoicePrompt(
                 question: "Is your account registered under \(user.userName) / \(user.userEmail)?"
             )
 
-            guard confirmed else {
-                let shouldInputAnother = Noora().yesOrNoChoicePrompt(
-                    question:
-                        "Do you want to update the API key?"
-                )
-
-                if shouldInputAnother {
-                    await start()
-                }
+            guard !confirmed else {
+                writeToken(token)
                 return
             }
 
-            writeToken(token)
+            let shouldInputAnother = Noora().yesOrNoChoicePrompt(
+                question: "Do you want to update the API key?"
+            )
+
+            if shouldInputAnother {
+                await start()
+            }
         } catch {
             Noora().error(.alert("Failed to verify token: \(error.localizedDescription)"))
 
@@ -74,7 +65,7 @@ struct AddLMTokenCommand: AsyncParsableCommand {
 
     private func writeToken(_ token: String) {
         do {
-            try KeychainWrapper.saveLunchMoneyToken(token)
+            try LunchMoneyClient.saveToken(token)
             Noora().success("Token saved successfully")
         } catch {
             Noora().error(.alert("\(error.localizedDescription)"))

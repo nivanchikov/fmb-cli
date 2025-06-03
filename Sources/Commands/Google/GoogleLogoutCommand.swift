@@ -8,7 +8,7 @@ struct GoogleLogoutCommand: AsyncParsableCommand {
     )
 
     func run() async throws {
-        guard try KeychainWrapper.hasGoogleTokens() else {
+        guard try GoogleClient.isSignedIn else {
             Noora().success(.alert("You are already logged out."))
             return
         }
@@ -24,7 +24,7 @@ struct GoogleLogoutCommand: AsyncParsableCommand {
         }
 
         do {
-            try KeychainWrapper.deleteGoogleTokens()
+            try GoogleClient.signOut()
             Noora().success(.alert("You have been logged out."))
         } catch {
             Noora().error(.alert("Failed to log out: \(error)"))
